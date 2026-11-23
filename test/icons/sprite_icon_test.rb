@@ -65,6 +65,21 @@ class Icons::SpriteIconTest < Minitest::Test
     assert_match(/stroke-width="2"/, sprite_icon.svg)
   end
 
+  def test_carries_root_presentation_attributes_of_the_icon
+    svg = sprite_icon_svg({})
+
+    assert_match(/ fill="none"/, svg)
+    assert_match(/ stroke="currentColor"/, svg)
+  end
+
+  def test_fill_and_stroke_arguments_override_root_attributes
+    svg = sprite_icon_svg({fill: "red", stroke: "blue"})
+
+    assert_match(/ fill="red"/, svg)
+    assert_match(/ stroke="blue"/, svg)
+    refute_match(/fill="none"|stroke="currentColor"/, svg)
+  end
+
   def test_uses_default_variant_from_config
     Icons.configure do |config|
       config.default_variant = :outline
@@ -92,5 +107,11 @@ class Icons::SpriteIconTest < Minitest::Test
 
     result = sprite_icon.svg
     assert_match(/<svg/, result)
+  end
+
+  private
+
+  def sprite_icon_svg(arguments)
+    Icons::SpriteIcon.new(name: "academic-cap", library: "heroicons", variant: :outline, arguments: arguments).svg
   end
 end

@@ -57,4 +57,25 @@ class Icons::SpriteIcon
       .tap { |svg| attach_attributes(to: svg) }
       .to_html
   end
+
+  # The sprite symbol must not carry the root `fill`/`stroke` of the source icon: attributes set on a
+  # `<symbol>` win over the ones inherited from the `<svg>` that references it, so a per-icon override
+  # (`arguments: {fill: "red"}`) would be ignored. They are set on the `<svg>` instead, as defaults.
+  PRESENTATION_ATTRIBUTES = %w[fill stroke stroke-linecap stroke-linejoin].freeze
+
+  def default_attributes
+    root_presentation_attributes.merge(super)
+  end
+
+  def root_presentation_attributes
+    return {} unless reference.exists?
+
+    root = Nokogiri::XML(File.read(reference.file_path)).at_css("svg")
+
+    PRESENTATION_ATTRIBUTES.each_with_object({}) do |name, attributes|
+      attributes[name.to_sym] = root[name] if root&.[](name)
+    end
+  rescue Icons::IconNotFound
+    {}
+  end
 end
